@@ -67,8 +67,8 @@ php -l uninstall.php
 If you want proper WordPress coding standard checks, install Composer dependencies:
 
 ```bash
-./bin/composer install
-./vendor/bin/phpcs
+composer install
+vendor/bin/phpcs
 ```
 
 ## Development notes

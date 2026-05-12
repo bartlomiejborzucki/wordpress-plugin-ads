@@ -26,19 +26,19 @@ The plugin manages reusable ads in wp-admin and renders one random published ad 
 Install dev tooling:
 
 ```bash
-./bin/composer install
+composer install
 ```
 
 Run WordPress coding standards:
 
 ```bash
-./vendor/bin/phpcs
+vendor/bin/phpcs
 ```
 
 Auto-fix style issues:
 
 ```bash
-./vendor/bin/phpcbf
+vendor/bin/phpcbf
 ```
 
 Build the plugin ZIP:
@@ -74,7 +74,7 @@ php -l includes/class-ads-plugin.php
 php -l includes/class-ads-admin.php
 php -l includes/class-ads-shortcode.php
 php -l uninstall.php
-./vendor/bin/phpcs
+vendor/bin/phpcs
 ./scripts/package-plugin.sh
 ```
 

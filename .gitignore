@@ -1,0 +1,27 @@
+# Composer dependencies and local cache
+/vendor/
+/.composer-home/
+
+# Build artifacts
+/dist/
+
+# Local PHAR tools and wrappers
+/tools/
+/bin/
+
+# Logs and runtime files
+*.log
+*.cache
+*.tmp
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# WordPress local installs and uploads
+/wordpress/
+/wp/
+/wp-content/uploads/
+/wp-content/cache/
