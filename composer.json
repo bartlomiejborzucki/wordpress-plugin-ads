@@ -1,0 +1,25 @@
+{
+  "name": "codex/ads-shortcode-plugin",
+  "description": "Reusable ads shortcode plugin for WordPress.",
+  "type": "project",
+  "require-dev": {
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.1",
+    "wp-coding-standards/wpcs": "^3.1"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "scripts": {
+    "lint": [
+      "php -l ads-shortcode-plugin.php",
+      "php -l includes/class-ads-plugin.php",
+      "php -l includes/class-ads-admin.php",
+      "php -l includes/class-ads-shortcode.php",
+      "php -l uninstall.php"
+    ],
+    "phpcs": "phpcs --standard=phpcs.xml.dist",
+    "phpcbf": "phpcbf --standard=phpcs.xml.dist"
+  }
+}
