@@ -16,7 +16,7 @@ The plugin manages reusable ads in wp-admin and renders one random published ad 
 
 - `ads-shortcode-plugin.php` boots the plugin and registers activation/deactivation hooks.
 - `includes/class-ads-plugin.php` registers the CPT, ad group taxonomy, shortcode, meta fields, AJAX endpoints, versioned migrations, and shared sanitization.
-- `includes/class-ads-admin.php` contains wp-admin UI, meta boxes, list table column, and help page.
+- `includes/class-ads-admin.php` contains wp-admin UI, meta boxes, list table column, duplicate action, and help page.
 - `includes/class-ads-shortcode.php` parses shortcode attributes, selects an ad by IDs/groups, guards against recursion, and renders output.
 - `uninstall.php` fully removes plugin data by deleting `ads_item` posts on uninstall.
 - `scripts/package-plugin.sh` builds the installable ZIP archive.
@@ -53,6 +53,15 @@ Output package:
 dist/ads-shortcode-plugin.zip
 ```
 
+Release workflow:
+
+```bash
+vendor/bin/phpcs
+./scripts/package-plugin.sh
+```
+
+Before releasing, bump both `Version` and `ADS_PLUGIN_VERSION` in `ads-shortcode-plugin.php`, update `Stable tag` and `Changelog` in `readme.txt`, build `dist/ads-shortcode-plugin.zip`, then commit and push the changes.
+
 ## Working Rules
 
 - Follow WordPress Coding Standards configured in `phpcs.xml.dist`.
@@ -88,6 +97,7 @@ Functional checks should be done in a temporary WordPress instance by testing:
 - ad and group emission dates,
 - weighted selection,
 - fallback ad behavior,
+- duplicate ad action in wp-admin,
 - click/impression counters,
 - `cache="ajax"` rendering with a page cache plugin or cached page simulation,
 - builder usage in elements that execute WordPress shortcodes.

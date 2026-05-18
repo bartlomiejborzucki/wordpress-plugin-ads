@@ -4,7 +4,7 @@ Tags: ads, shortcode, advertising, oxygen, wysiwyg
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,6 +25,7 @@ Features:
 * Start and end dates for ads and ad groups
 * Weighted random ad selection
 * Impression and click counters
+* Duplicate action for quickly creating draft copies of existing ads
 * Global fallback ad setting
 * Cache-friendly AJAX rendering for full-page cache setups
 * Random selection of one published ad when multiple IDs are provided
@@ -70,6 +71,12 @@ Yes. The preferred approach is to use global theme classes. The plugin also allo
 The plugin renders one random published ad from the provided list.
 
 == Changelog ==
+
+= 1.2.0 =
+
+* Added a Duplicate row action for ads in wp-admin.
+* Duplicated ads are created as drafts and copy content, groups, schedule, weight, wrapper classes, and wrapper CSS declarations.
+* Duplicated ads start impression and click counters from zero.
 
 = 1.1.0 =
 

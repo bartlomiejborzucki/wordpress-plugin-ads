@@ -9,8 +9,10 @@ class Ads_Admin {
 	public static function boot() {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'register_meta_boxes' ) );
 		add_action( 'save_post_' . ADS_POST_TYPE, array( __CLASS__, 'save_meta_boxes' ) );
+		add_action( 'admin_post_ads_duplicate_ad', array( __CLASS__, 'duplicate_ad' ) );
 		add_filter( 'manage_' . ADS_POST_TYPE . '_posts_columns', array( __CLASS__, 'register_columns' ) );
 		add_action( 'manage_' . ADS_POST_TYPE . '_posts_custom_column', array( __CLASS__, 'render_columns' ), 10, 2 );
+		add_filter( 'post_row_actions', array( __CLASS__, 'register_row_actions' ), 10, 2 );
 		add_action( 'admin_menu', array( __CLASS__, 'register_help_page' ) );
 		add_action( ADS_GROUP_TAXONOMY . '_add_form_fields', array( __CLASS__, 'render_group_add_fields' ) );
 		add_action( ADS_GROUP_TAXONOMY . '_edit_form_fields', array( __CLASS__, 'render_group_edit_fields' ) );
@@ -151,6 +153,126 @@ class Ads_Admin {
 		update_post_meta( $post_id, '_ads_start_date', Ads_Plugin::sanitize_date( $start_date ) );
 		update_post_meta( $post_id, '_ads_end_date', Ads_Plugin::sanitize_date( $end_date ) );
 		update_post_meta( $post_id, '_ads_weight', Ads_Plugin::sanitize_weight( $weight ) );
+	}
+
+	public static function register_row_actions( $actions, $post ) {
+		if ( ! $post instanceof WP_Post || ADS_POST_TYPE !== $post->post_type ) {
+			return $actions;
+		}
+
+		if ( ! current_user_can( 'edit_post', $post->ID ) ) {
+			return $actions;
+		}
+
+		$duplicate_url = wp_nonce_url(
+			add_query_arg(
+				array(
+					'action' => 'ads_duplicate_ad',
+					'ad_id'  => absint( $post->ID ),
+				),
+				admin_url( 'admin-post.php' )
+			),
+			'ads_duplicate_ad_' . $post->ID
+		);
+
+		$actions['ads_duplicate'] = sprintf(
+			'<a href="%1$s" aria-label="%2$s">%3$s</a>',
+			esc_url( $duplicate_url ),
+			/* translators: %s: ad title. */
+			esc_attr( sprintf( __( 'Duplicate "%s"', 'ads-shortcode-plugin' ), get_the_title( $post ) ) ),
+			esc_html__( 'Duplicate', 'ads-shortcode-plugin' )
+		);
+
+		return $actions;
+	}
+
+	public static function duplicate_ad() {
+		$source_id = isset( $_GET['ad_id'] ) ? absint( wp_unslash( $_GET['ad_id'] ) ) : 0;
+
+		if ( ! $source_id || ADS_POST_TYPE !== get_post_type( $source_id ) ) {
+			wp_die( esc_html__( 'Invalid ad.', 'ads-shortcode-plugin' ) );
+		}
+
+		check_admin_referer( 'ads_duplicate_ad_' . $source_id );
+
+		if ( ! current_user_can( 'edit_post', $source_id ) || ! current_user_can( 'edit_posts' ) ) {
+			wp_die( esc_html__( 'You do not have permission to duplicate this ad.', 'ads-shortcode-plugin' ) );
+		}
+
+		$source = get_post( $source_id );
+
+		if ( ! $source instanceof WP_Post ) {
+			wp_die( esc_html__( 'Invalid ad.', 'ads-shortcode-plugin' ) );
+		}
+
+		$new_ad_id = wp_insert_post(
+			array(
+				'post_author'           => get_current_user_id(),
+				'post_content'          => $source->post_content,
+				'post_content_filtered' => $source->post_content_filtered,
+				'post_excerpt'          => $source->post_excerpt,
+				'post_name'             => '',
+				'post_parent'           => 0,
+				'post_password'         => $source->post_password,
+				'post_status'           => 'draft',
+				/* translators: %s: source ad title. */
+				'post_title'            => sprintf( __( '%s (Copy)', 'ads-shortcode-plugin' ), $source->post_title ),
+				'post_type'             => ADS_POST_TYPE,
+			),
+			true
+		);
+
+		if ( is_wp_error( $new_ad_id ) ) {
+			wp_die( esc_html( $new_ad_id->get_error_message() ) );
+		}
+
+		self::copy_duplicate_meta( $source_id, $new_ad_id );
+		self::copy_duplicate_terms( $source_id, $new_ad_id );
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'post'   => absint( $new_ad_id ),
+					'action' => 'edit',
+				),
+				admin_url( 'post.php' )
+			)
+		);
+		exit;
+	}
+
+	private static function copy_duplicate_meta( $source_id, $new_ad_id ) {
+		$meta_keys = array(
+			'_ads_wrapper_classes',
+			'_ads_inline_css',
+			'_ads_start_date',
+			'_ads_end_date',
+			'_ads_weight',
+		);
+
+		foreach ( $meta_keys as $meta_key ) {
+			$meta_value = get_post_meta( $source_id, $meta_key, true );
+
+			if ( '' !== $meta_value ) {
+				update_post_meta( $new_ad_id, $meta_key, $meta_value );
+			}
+		}
+	}
+
+	private static function copy_duplicate_terms( $source_id, $new_ad_id ) {
+		$term_ids = wp_get_object_terms(
+			$source_id,
+			ADS_GROUP_TAXONOMY,
+			array(
+				'fields' => 'ids',
+			)
+		);
+
+		if ( is_wp_error( $term_ids ) || empty( $term_ids ) ) {
+			return;
+		}
+
+		wp_set_object_terms( $new_ad_id, array_map( 'absint', $term_ids ), ADS_GROUP_TAXONOMY );
 	}
 
 	public static function register_columns( $columns ) {
