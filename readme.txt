@@ -4,7 +4,7 @@ Tags: ads, shortcode, advertising, oxygen, wysiwyg
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,6 +20,7 @@ Features:
 * Standard WordPress editor for ad content
 * Optional wrapper CSS classes per ad
 * Optional wrapper CSS declarations per ad
+* Optional promotional separator template with global defaults and per-ad overrides
 * Shortcode support with one or multiple ad IDs
 * Ad groups with one or multiple group slugs
 * Start and end dates for ads and ad groups
@@ -66,11 +67,21 @@ Yes, as long as you place the shortcode inside an element that executes native W
 
 Yes. The preferred approach is to use global theme classes. The plugin also allows optional wrapper classes and scoped wrapper CSS declarations per ad.
 
+= Can I add the same separator around every ad? =
+
+Yes. Version 1.3.0 adds a promotional separator template with editable global labels and per-ad overrides.
+
 = What happens if I pass multiple IDs? =
 
 The plugin renders one random published ad from the provided list.
 
 == Changelog ==
+
+= 1.3.0 =
+
+* Added a promotional separator template for ads.
+* Added global settings for default top and bottom promotional labels.
+* Added per-ad controls to inherit, customize, or disable the promotional template.
 
 = 1.2.0 =
 

@@ -175,6 +175,48 @@ class Ads_Plugin {
 				},
 			)
 		);
+
+		register_post_meta(
+			ADS_POST_TYPE,
+			'_ads_template_mode',
+			array(
+				'single'            => true,
+				'type'              => 'string',
+				'show_in_rest'      => false,
+				'sanitize_callback' => array( __CLASS__, 'sanitize_template_mode' ),
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+
+		register_post_meta(
+			ADS_POST_TYPE,
+			'_ads_template_top_label',
+			array(
+				'single'            => true,
+				'type'              => 'string',
+				'show_in_rest'      => false,
+				'sanitize_callback' => array( __CLASS__, 'sanitize_template_label' ),
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+
+		register_post_meta(
+			ADS_POST_TYPE,
+			'_ads_template_bottom_label',
+			array(
+				'single'            => true,
+				'type'              => 'string',
+				'show_in_rest'      => false,
+				'sanitize_callback' => array( __CLASS__, 'sanitize_template_label' ),
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
 	}
 
 	public static function register_shortcode() {
@@ -307,6 +349,32 @@ class Ads_Plugin {
 		}
 
 		return min( $weight, 100 );
+	}
+
+	public static function sanitize_template_mode( $value ) {
+		$value = sanitize_key( (string) $value );
+		$modes = array( 'inherit', 'enabled', 'disabled' );
+
+		return in_array( $value, $modes, true ) ? $value : 'inherit';
+	}
+
+	public static function sanitize_template_label( $value ) {
+		$value = sanitize_text_field( (string) $value );
+		$value = trim( preg_replace( '/\s+/', ' ', $value ) );
+
+		if ( function_exists( 'mb_substr' ) ) {
+			return mb_substr( $value, 0, 80 );
+		}
+
+		return substr( $value, 0, 80 );
+	}
+
+	public static function get_default_template_top_label() {
+		return __( 'Promocja materiałów własnych', 'ads-shortcode-plugin' );
+	}
+
+	public static function get_default_template_bottom_label() {
+		return __( 'Koniec promocji', 'ads-shortcode-plugin' );
 	}
 
 	public static function is_date_range_active( $start_date, $end_date ) {

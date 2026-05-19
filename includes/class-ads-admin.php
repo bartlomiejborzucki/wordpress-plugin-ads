@@ -48,7 +48,11 @@ class Ads_Admin {
 		$start_date      = get_post_meta( $post->ID, '_ads_start_date', true );
 		$end_date        = get_post_meta( $post->ID, '_ads_end_date', true );
 		$weight          = get_post_meta( $post->ID, '_ads_weight', true );
+		$template_mode   = get_post_meta( $post->ID, '_ads_template_mode', true );
+		$top_label       = get_post_meta( $post->ID, '_ads_template_top_label', true );
+		$bottom_label    = get_post_meta( $post->ID, '_ads_template_bottom_label', true );
 		$weight          = '' === $weight ? 1 : absint( $weight );
+		$template_mode   = '' === $template_mode ? 'inherit' : Ads_Plugin::sanitize_template_mode( $template_mode );
 		?>
 		<p>
 			<label for="ads-start-date"><strong><?php esc_html_e( 'Start date', 'ads-shortcode-plugin' ); ?></strong></label>
@@ -116,6 +120,40 @@ class Ads_Admin {
 		<p class="description">
 			<?php esc_html_e( 'Enter CSS declarations only. They will be scoped to this ad wrapper.', 'ads-shortcode-plugin' ); ?>
 		</p>
+		<hr />
+		<p>
+			<label for="ads-template-mode"><strong><?php esc_html_e( 'Promotional template', 'ads-shortcode-plugin' ); ?></strong></label>
+			<select id="ads-template-mode" name="ads_template_mode" class="widefat">
+				<option value="inherit" <?php selected( $template_mode, 'inherit' ); ?>><?php esc_html_e( 'Inherit global setting', 'ads-shortcode-plugin' ); ?></option>
+				<option value="enabled" <?php selected( $template_mode, 'enabled' ); ?>><?php esc_html_e( 'Use custom labels', 'ads-shortcode-plugin' ); ?></option>
+				<option value="disabled" <?php selected( $template_mode, 'disabled' ); ?>><?php esc_html_e( 'Disable for this ad', 'ads-shortcode-plugin' ); ?></option>
+			</select>
+		</p>
+		<p>
+			<label for="ads-template-top-label"><strong><?php esc_html_e( 'Top label', 'ads-shortcode-plugin' ); ?></strong></label>
+			<input
+				type="text"
+				id="ads-template-top-label"
+				name="ads_template_top_label"
+				class="widefat"
+				value="<?php echo esc_attr( $top_label ); ?>"
+				placeholder="<?php echo esc_attr( Ads_Plugin::get_default_template_top_label() ); ?>"
+			/>
+		</p>
+		<p>
+			<label for="ads-template-bottom-label"><strong><?php esc_html_e( 'Bottom label', 'ads-shortcode-plugin' ); ?></strong></label>
+			<input
+				type="text"
+				id="ads-template-bottom-label"
+				name="ads_template_bottom_label"
+				class="widefat"
+				value="<?php echo esc_attr( $bottom_label ); ?>"
+				placeholder="<?php echo esc_attr( Ads_Plugin::get_default_template_bottom_label() ); ?>"
+			/>
+		</p>
+		<p class="description">
+			<?php esc_html_e( 'Labels are used only when the promotional template is active for this ad.', 'ads-shortcode-plugin' ); ?>
+		</p>
 		<?php
 	}
 
@@ -147,12 +185,18 @@ class Ads_Admin {
 		$start_date      = isset( $_POST['ads_start_date'] ) ? wp_unslash( $_POST['ads_start_date'] ) : '';
 		$end_date        = isset( $_POST['ads_end_date'] ) ? wp_unslash( $_POST['ads_end_date'] ) : '';
 		$weight          = isset( $_POST['ads_weight'] ) ? wp_unslash( $_POST['ads_weight'] ) : 1;
+		$template_mode   = isset( $_POST['ads_template_mode'] ) ? wp_unslash( $_POST['ads_template_mode'] ) : 'inherit';
+		$top_label       = isset( $_POST['ads_template_top_label'] ) ? wp_unslash( $_POST['ads_template_top_label'] ) : '';
+		$bottom_label    = isset( $_POST['ads_template_bottom_label'] ) ? wp_unslash( $_POST['ads_template_bottom_label'] ) : '';
 
 		update_post_meta( $post_id, '_ads_wrapper_classes', Ads_Plugin::sanitize_wrapper_classes( $wrapper_classes ) );
 		update_post_meta( $post_id, '_ads_inline_css', Ads_Plugin::sanitize_css_declarations( $inline_css ) );
 		update_post_meta( $post_id, '_ads_start_date', Ads_Plugin::sanitize_date( $start_date ) );
 		update_post_meta( $post_id, '_ads_end_date', Ads_Plugin::sanitize_date( $end_date ) );
 		update_post_meta( $post_id, '_ads_weight', Ads_Plugin::sanitize_weight( $weight ) );
+		update_post_meta( $post_id, '_ads_template_mode', Ads_Plugin::sanitize_template_mode( $template_mode ) );
+		update_post_meta( $post_id, '_ads_template_top_label', Ads_Plugin::sanitize_template_label( $top_label ) );
+		update_post_meta( $post_id, '_ads_template_bottom_label', Ads_Plugin::sanitize_template_label( $bottom_label ) );
 	}
 
 	public static function register_row_actions( $actions, $post ) {
@@ -248,6 +292,9 @@ class Ads_Admin {
 			'_ads_start_date',
 			'_ads_end_date',
 			'_ads_weight',
+			'_ads_template_mode',
+			'_ads_template_top_label',
+			'_ads_template_bottom_label',
 		);
 
 		foreach ( $meta_keys as $meta_key ) {
@@ -366,14 +413,23 @@ class Ads_Admin {
 
 	public static function render_settings_page() {
 		if ( isset( $_POST['ads_settings_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ads_settings_nonce'] ) ), 'ads_save_settings' ) && current_user_can( 'manage_options' ) ) {
-			$fallback_ad_id = isset( $_POST['ads_fallback_ad_id'] ) ? absint( wp_unslash( $_POST['ads_fallback_ad_id'] ) ) : 0;
+			$fallback_ad_id        = isset( $_POST['ads_fallback_ad_id'] ) ? absint( wp_unslash( $_POST['ads_fallback_ad_id'] ) ) : 0;
+			$template_enabled      = isset( $_POST['ads_template_enabled'] ) ? 1 : 0;
+			$template_top_label    = isset( $_POST['ads_template_top_label'] ) ? wp_unslash( $_POST['ads_template_top_label'] ) : '';
+			$template_bottom_label = isset( $_POST['ads_template_bottom_label'] ) ? wp_unslash( $_POST['ads_template_bottom_label'] ) : '';
 			update_option( ADS_FALLBACK_AD_OPTION, $fallback_ad_id, false );
+			update_option( ADS_TEMPLATE_ENABLED_OPTION, $template_enabled, false );
+			update_option( ADS_TEMPLATE_TOP_LABEL_OPTION, Ads_Plugin::sanitize_template_label( $template_top_label ), false );
+			update_option( ADS_TEMPLATE_BOTTOM_LABEL_OPTION, Ads_Plugin::sanitize_template_label( $template_bottom_label ), false );
 			?>
 			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings saved.', 'ads-shortcode-plugin' ); ?></p></div>
 			<?php
 		}
 
-		$fallback_ad_id = absint( get_option( ADS_FALLBACK_AD_OPTION, 0 ) );
+		$fallback_ad_id        = absint( get_option( ADS_FALLBACK_AD_OPTION, 0 ) );
+		$template_enabled      = (bool) get_option( ADS_TEMPLATE_ENABLED_OPTION, 1 );
+		$template_top_label    = get_option( ADS_TEMPLATE_TOP_LABEL_OPTION, Ads_Plugin::get_default_template_top_label() );
+		$template_bottom_label = get_option( ADS_TEMPLATE_BOTTOM_LABEL_OPTION, Ads_Plugin::get_default_template_bottom_label() );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Ads Settings', 'ads-shortcode-plugin' ); ?></h1>
@@ -392,6 +448,48 @@ class Ads_Admin {
 								value="<?php echo esc_attr( $fallback_ad_id ); ?>"
 							/>
 							<p class="description"><?php esc_html_e( 'Rendered when no eligible ad is found. Use 0 to disable fallback.', 'ads-shortcode-plugin' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Promotional template', 'ads-shortcode-plugin' ); ?></th>
+						<td>
+							<label for="ads-template-enabled">
+								<input
+									type="checkbox"
+									id="ads-template-enabled"
+									name="ads_template_enabled"
+									value="1"
+									<?php checked( $template_enabled ); ?>
+								/>
+								<?php esc_html_e( 'Wrap ads with promotional separators by default.', 'ads-shortcode-plugin' ); ?>
+							</label>
+							<p class="description"><?php esc_html_e( 'Each ad can inherit this setting, override labels, or disable the template.', 'ads-shortcode-plugin' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="ads-template-top-label"><?php esc_html_e( 'Default top label', 'ads-shortcode-plugin' ); ?></label></th>
+						<td>
+							<input
+								type="text"
+								id="ads-template-top-label"
+								name="ads_template_top_label"
+								class="regular-text"
+								value="<?php echo esc_attr( $template_top_label ); ?>"
+								placeholder="<?php echo esc_attr( Ads_Plugin::get_default_template_top_label() ); ?>"
+							/>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="ads-template-bottom-label"><?php esc_html_e( 'Default bottom label', 'ads-shortcode-plugin' ); ?></label></th>
+						<td>
+							<input
+								type="text"
+								id="ads-template-bottom-label"
+								name="ads_template_bottom_label"
+								class="regular-text"
+								value="<?php echo esc_attr( $template_bottom_label ); ?>"
+								placeholder="<?php echo esc_attr( Ads_Plugin::get_default_template_bottom_label() ); ?>"
+							/>
 						</td>
 					</tr>
 				</table>

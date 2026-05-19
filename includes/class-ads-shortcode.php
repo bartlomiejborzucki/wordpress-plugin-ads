@@ -8,6 +8,7 @@ class Ads_Shortcode {
 
 	private static $render_stack             = array();
 	private static $tracking_script_rendered = false;
+	private static $template_style_rendered  = false;
 
 	public static function render( $atts ) {
 		$atts = shortcode_atts(
@@ -302,16 +303,84 @@ class Ads_Shortcode {
 			);
 		}
 
-		$html .= sprintf(
+		$ad_html = sprintf(
 			'<div id="%1$s" class="%2$s" data-ad-id="%3$d">%4$s</div>',
 			esc_attr( $instance_id ),
 			esc_attr( $classes ),
 			absint( $ad->ID ),
 			$content
 		);
+
+		$html .= self::maybe_wrap_ad_in_template( $ad, $ad_html );
 		$html .= self::get_click_tracking_script();
 
 		return $html;
+	}
+
+	private static function maybe_wrap_ad_in_template( WP_Post $ad, $ad_html ) {
+		$template = self::get_ad_template_settings( $ad->ID );
+
+		if ( ! $template['enabled'] ) {
+			return $ad_html;
+		}
+
+		return sprintf(
+			'%1$s<div class="ads-shortcode-promo-frame"><div class="ads-shortcode-promo-rule ads-shortcode-promo-rule--top"><span>%2$s</span></div><div class="ads-shortcode-promo-body">%3$s</div><div class="ads-shortcode-promo-rule ads-shortcode-promo-rule--bottom"><span>%4$s</span></div></div>',
+			self::get_template_style(),
+			esc_html( $template['top_label'] ),
+			$ad_html,
+			esc_html( $template['bottom_label'] )
+		);
+	}
+
+	private static function get_ad_template_settings( $ad_id ) {
+		$mode           = get_post_meta( $ad_id, '_ads_template_mode', true );
+		$mode           = '' === $mode ? 'inherit' : Ads_Plugin::sanitize_template_mode( $mode );
+		$top_label      = get_post_meta( $ad_id, '_ads_template_top_label', true );
+		$bottom_label   = get_post_meta( $ad_id, '_ads_template_bottom_label', true );
+		$global_enabled = (bool) get_option( ADS_TEMPLATE_ENABLED_OPTION, 1 );
+
+		if ( 'disabled' === $mode ) {
+			return array(
+				'enabled'      => false,
+				'top_label'    => '',
+				'bottom_label' => '',
+			);
+		}
+
+		$enabled = 'enabled' === $mode ? true : $global_enabled;
+
+		if ( '' === $top_label ) {
+			$top_label = get_option( ADS_TEMPLATE_TOP_LABEL_OPTION, Ads_Plugin::get_default_template_top_label() );
+		}
+
+		if ( '' === $bottom_label ) {
+			$bottom_label = get_option( ADS_TEMPLATE_BOTTOM_LABEL_OPTION, Ads_Plugin::get_default_template_bottom_label() );
+		}
+
+		if ( '' === $top_label ) {
+			$top_label = Ads_Plugin::get_default_template_top_label();
+		}
+
+		if ( '' === $bottom_label ) {
+			$bottom_label = Ads_Plugin::get_default_template_bottom_label();
+		}
+
+		return array(
+			'enabled'      => $enabled,
+			'top_label'    => Ads_Plugin::sanitize_template_label( $top_label ),
+			'bottom_label' => Ads_Plugin::sanitize_template_label( $bottom_label ),
+		);
+	}
+
+	private static function get_template_style() {
+		if ( self::$template_style_rendered ) {
+			return '';
+		}
+
+		self::$template_style_rendered = true;
+
+		return '<style>.ads-shortcode-promo-frame{margin:1.5rem 0}.ads-shortcode-promo-rule{display:flex;align-items:center;gap:.75rem;color:#68737a;font-size:12px;font-weight:600;letter-spacing:.08em;line-height:1.3;text-transform:uppercase}.ads-shortcode-promo-rule:before,.ads-shortcode-promo-rule:after{content:"";height:1px;background:currentColor;opacity:.45;flex:1 1 auto}.ads-shortcode-promo-rule span{flex:0 1 auto;max-width:100%;text-align:center}.ads-shortcode-promo-body{margin:14px 0}.ads-shortcode-promo-rule--bottom{font-size:11px;color:#8a9499}@media (max-width:600px){.ads-shortcode-promo-rule{gap:.55rem;font-size:10px;letter-spacing:.04em}.ads-shortcode-promo-body{margin:10px 0}}</style>';
 	}
 
 	private static function get_click_tracking_script() {

@@ -7,6 +7,7 @@ WordPress plugin for managing reusable ads and embedding them with a shortcode.
 - creates an `Ads` admin section backed by a custom post type,
 - lets you build ad content with the standard WordPress editor,
 - supports optional wrapper classes and scoped wrapper CSS declarations,
+- supports an optional promotional separator template with global labels and per-ad overrides,
 - renders ads with `[ads ids="1"]` or `[ads ids="1,2,3"]`,
 - renders ads by group with `[ads groups="sidebar"]` or `[ads groups="sidebar,footer"]`,
 - randomly picks one published ad when multiple IDs are passed,
