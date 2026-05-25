@@ -40,9 +40,12 @@ Shortcode examples:
 * `[ads ids="12,24,36"]`
 * `[ads groups="sidebar"]`
 * `[ads groups="sidebar,footer"]`
+* `[ads ids="12,24,36" groups="sidebar,footer"]`
 * `[ads ids="12,24,36" cache="ajax"]`
 
 When multiple IDs are passed, the plugin randomly selects one published ad and renders it.
+
+You can combine `ids` and `groups` in the same shortcode. The plugin builds one candidate pool from the provided ad IDs and ad groups, then renders one random published ad from that combined pool.
 
 Use `cache="ajax"` when full-page cache, including LiteSpeed Cache, freezes the randomly selected ad in cached HTML. The default mode does not purge caches, set cache headers, or interfere with cache plugins.
 
@@ -74,6 +77,10 @@ Yes. Version 1.3.0 adds a promotional separator template with editable global la
 = What happens if I pass multiple IDs? =
 
 The plugin renders one random published ad from the provided list.
+
+= Can I combine IDs and groups in one shortcode? =
+
+Yes. For example, `[ads ids="12,24" groups="sidebar,footer"]` uses both the provided ad IDs and ads assigned to the provided groups as the candidate pool, then renders one random published ad.
 
 == Changelog ==
 
