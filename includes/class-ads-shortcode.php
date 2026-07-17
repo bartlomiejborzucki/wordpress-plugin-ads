@@ -291,6 +291,7 @@ class Ads_Shortcode {
 		$classes = trim( 'ads-shortcode-item ' . $wrapper_classes );
 		$content = apply_filters( 'the_content', $ad->post_content );
 		$content = self::optimize_media_markup( $content );
+		$content = self::add_utm_parameters_to_click_targets( $content, $ad );
 		Ads_Plugin::increment_counter( $ad->ID, '_ads_impressions' );
 
 		$html = '';
@@ -408,6 +409,147 @@ class Ads_Shortcode {
 		}
 
 		return self::optimize_media_markup_with_regex( $content );
+	}
+
+	private static function add_utm_parameters_to_click_targets( $content, WP_Post $ad ) {
+		if ( false === stripos( $content, '<a' ) && false === stripos( $content, '<form' ) && false === stripos( $content, 'formaction' ) ) {
+			return $content;
+		}
+
+		$parameters = self::get_ad_utm_parameters( $ad );
+
+		if ( class_exists( 'WP_HTML_Tag_Processor' ) ) {
+			return self::add_utm_parameters_with_tag_processor( $content, $parameters, $ad->ID );
+		}
+
+		return self::add_utm_parameters_with_regex( $content, $parameters, $ad->ID );
+	}
+
+	private static function get_ad_utm_parameters( WP_Post $ad ) {
+		$source   = get_post_meta( $ad->ID, '_ads_utm_source', true );
+		$medium   = get_post_meta( $ad->ID, '_ads_utm_medium', true );
+		$campaign = get_post_meta( $ad->ID, '_ads_utm_campaign', true );
+
+		if ( '' === $source ) {
+			$source = wp_parse_url( home_url( '/' ), PHP_URL_HOST );
+			$source = $source ? $source : 'website';
+		}
+
+		if ( '' === $medium ) {
+			$medium = 'display';
+		}
+
+		if ( '' === $campaign ) {
+			$campaign = $ad->post_name ? $ad->post_name : 'ad-' . $ad->ID;
+		}
+
+		return array(
+			'utm_source'   => Ads_Plugin::sanitize_utm_value( $source ),
+			'utm_medium'   => Ads_Plugin::sanitize_utm_value( $medium ),
+			'utm_campaign' => Ads_Plugin::sanitize_utm_value( $campaign ),
+		);
+	}
+
+	private static function add_utm_parameters_with_tag_processor( $content, array $parameters, $ad_id ) {
+		$processor  = new WP_HTML_Tag_Processor( $content );
+		$position   = 0;
+		$attributes = array(
+			'A'      => 'href',
+			'FORM'   => 'action',
+			'BUTTON' => 'formaction',
+			'INPUT'  => 'formaction',
+		);
+
+		while ( $processor->next_tag() ) {
+			$tag_name = strtoupper( $processor->get_tag() );
+
+			if ( ! isset( $attributes[ $tag_name ] ) ) {
+				continue;
+			}
+
+			$attribute = $attributes[ $tag_name ];
+			$url       = $processor->get_attribute( $attribute );
+
+			if ( ! is_string( $url ) || ! self::is_trackable_url( $url ) ) {
+				continue;
+			}
+
+			++$position;
+			$processor->set_attribute( $attribute, self::add_missing_utm_parameters( $url, $parameters, $ad_id, $position ) );
+		}
+
+		return $processor->get_updated_html();
+	}
+
+	private static function add_utm_parameters_with_regex( $content, array $parameters, $ad_id ) {
+		$position = 0;
+
+		return preg_replace_callback(
+			'/<(a|form|button|input)\b[^>]*>/i',
+			function ( $matches ) use ( $parameters, $ad_id, &$position ) {
+				$attributes = array(
+					'a'      => 'href',
+					'form'   => 'action',
+					'button' => 'formaction',
+					'input'  => 'formaction',
+				);
+				$attribute  = $attributes[ strtolower( $matches[1] ) ];
+				$tag        = $matches[0];
+				$pattern    = '/(\s' . preg_quote( $attribute, '/' ) . '\s*=\s*)(?:(["\'])(.*?)\2|([^\s"\'=<>`]+))/is';
+
+				return preg_replace_callback(
+					$pattern,
+					function ( $attribute_matches ) use ( $parameters, $ad_id, &$position ) {
+						$quote = isset( $attribute_matches[2] ) ? $attribute_matches[2] : '';
+						$value = '' !== $quote ? $attribute_matches[3] : $attribute_matches[4];
+						$url   = html_entity_decode( $value, ENT_QUOTES, 'UTF-8' );
+
+						if ( ! self::is_trackable_url( $url ) ) {
+							return $attribute_matches[0];
+						}
+
+						++$position;
+						$url = self::add_missing_utm_parameters( $url, $parameters, $ad_id, $position );
+
+						return $attribute_matches[1] . $quote . esc_url( $url ) . $quote;
+					},
+					$tag,
+					1
+				);
+			},
+			$content
+		);
+	}
+
+	private static function is_trackable_url( $url ) {
+		$url = trim( (string) $url );
+
+		if ( '' === $url || '#' === substr( $url, 0, 1 ) ) {
+			return false;
+		}
+
+		$scheme = wp_parse_url( $url, PHP_URL_SCHEME );
+
+		return ! $scheme || in_array( strtolower( $scheme ), array( 'http', 'https' ), true );
+	}
+
+	private static function add_missing_utm_parameters( $url, array $parameters, $ad_id, $position ) {
+		$query               = wp_parse_url( $url, PHP_URL_QUERY );
+		$existing_parameters = array();
+
+		if ( is_string( $query ) ) {
+			parse_str( $query, $existing_parameters );
+		}
+
+		$parameters['utm_content'] = sprintf( 'ad-%d-target-%d', absint( $ad_id ), absint( $position ) );
+
+		foreach ( $parameters as $key => $value ) {
+			if ( array_key_exists( $key, $existing_parameters ) ) {
+				unset( $parameters[ $key ] );
+			}
+		}
+
+		return empty( $parameters ) ? $url : add_query_arg( $parameters, $url );
 	}
 
 	private static function optimize_media_markup_with_tag_processor( $content ) {

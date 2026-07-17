@@ -51,6 +51,9 @@ class Ads_Admin {
 		$template_mode   = get_post_meta( $post->ID, '_ads_template_mode', true );
 		$top_label       = get_post_meta( $post->ID, '_ads_template_top_label', true );
 		$bottom_label    = get_post_meta( $post->ID, '_ads_template_bottom_label', true );
+		$utm_source      = get_post_meta( $post->ID, '_ads_utm_source', true );
+		$utm_medium      = get_post_meta( $post->ID, '_ads_utm_medium', true );
+		$utm_campaign    = get_post_meta( $post->ID, '_ads_utm_campaign', true );
 		$weight          = '' === $weight ? 1 : absint( $weight );
 		$template_mode   = '' === $template_mode ? 'inherit' : Ads_Plugin::sanitize_template_mode( $template_mode );
 		?>
@@ -154,6 +157,44 @@ class Ads_Admin {
 		<p class="description">
 			<?php esc_html_e( 'Labels are used only when the promotional template is active for this ad.', 'ads-shortcode-plugin' ); ?>
 		</p>
+		<hr />
+		<p><strong><?php esc_html_e( 'UTM tracking', 'ads-shortcode-plugin' ); ?></strong></p>
+		<p>
+			<label for="ads-utm-source"><?php esc_html_e( 'Source', 'ads-shortcode-plugin' ); ?></label>
+			<input
+				type="text"
+				id="ads-utm-source"
+				name="ads_utm_source"
+				class="widefat"
+				value="<?php echo esc_attr( $utm_source ); ?>"
+				placeholder="<?php echo esc_attr( wp_parse_url( home_url( '/' ), PHP_URL_HOST ) ); ?>"
+			/>
+		</p>
+		<p>
+			<label for="ads-utm-medium"><?php esc_html_e( 'Medium', 'ads-shortcode-plugin' ); ?></label>
+			<input
+				type="text"
+				id="ads-utm-medium"
+				name="ads_utm_medium"
+				class="widefat"
+				value="<?php echo esc_attr( $utm_medium ); ?>"
+				placeholder="display"
+			/>
+		</p>
+		<p>
+			<label for="ads-utm-campaign"><?php esc_html_e( 'Campaign', 'ads-shortcode-plugin' ); ?></label>
+			<input
+				type="text"
+				id="ads-utm-campaign"
+				name="ads_utm_campaign"
+				class="widefat"
+				value="<?php echo esc_attr( $utm_campaign ); ?>"
+				placeholder="<?php echo esc_attr( $post->post_name ? $post->post_name : 'ad-' . $post->ID ); ?>"
+			/>
+		</p>
+		<p class="description">
+			<?php esc_html_e( 'UTM parameters are added to every link and explicit form target in this ad. Leave a field empty to use its default. Existing UTM values in a URL are preserved.', 'ads-shortcode-plugin' ); ?>
+		</p>
 		<?php
 	}
 
@@ -188,6 +229,9 @@ class Ads_Admin {
 		$template_mode   = isset( $_POST['ads_template_mode'] ) ? wp_unslash( $_POST['ads_template_mode'] ) : 'inherit';
 		$top_label       = isset( $_POST['ads_template_top_label'] ) ? wp_unslash( $_POST['ads_template_top_label'] ) : '';
 		$bottom_label    = isset( $_POST['ads_template_bottom_label'] ) ? wp_unslash( $_POST['ads_template_bottom_label'] ) : '';
+		$utm_source      = isset( $_POST['ads_utm_source'] ) ? wp_unslash( $_POST['ads_utm_source'] ) : '';
+		$utm_medium      = isset( $_POST['ads_utm_medium'] ) ? wp_unslash( $_POST['ads_utm_medium'] ) : '';
+		$utm_campaign    = isset( $_POST['ads_utm_campaign'] ) ? wp_unslash( $_POST['ads_utm_campaign'] ) : '';
 
 		update_post_meta( $post_id, '_ads_wrapper_classes', Ads_Plugin::sanitize_wrapper_classes( $wrapper_classes ) );
 		update_post_meta( $post_id, '_ads_inline_css', Ads_Plugin::sanitize_css_declarations( $inline_css ) );
@@ -197,6 +241,9 @@ class Ads_Admin {
 		update_post_meta( $post_id, '_ads_template_mode', Ads_Plugin::sanitize_template_mode( $template_mode ) );
 		update_post_meta( $post_id, '_ads_template_top_label', Ads_Plugin::sanitize_template_label( $top_label ) );
 		update_post_meta( $post_id, '_ads_template_bottom_label', Ads_Plugin::sanitize_template_label( $bottom_label ) );
+		update_post_meta( $post_id, '_ads_utm_source', Ads_Plugin::sanitize_utm_value( $utm_source ) );
+		update_post_meta( $post_id, '_ads_utm_medium', Ads_Plugin::sanitize_utm_value( $utm_medium ) );
+		update_post_meta( $post_id, '_ads_utm_campaign', Ads_Plugin::sanitize_utm_value( $utm_campaign ) );
 	}
 
 	public static function register_row_actions( $actions, $post ) {
@@ -295,6 +342,9 @@ class Ads_Admin {
 			'_ads_template_mode',
 			'_ads_template_top_label',
 			'_ads_template_bottom_label',
+			'_ads_utm_source',
+			'_ads_utm_medium',
+			'_ads_utm_campaign',
 		);
 
 		foreach ( $meta_keys as $meta_key ) {

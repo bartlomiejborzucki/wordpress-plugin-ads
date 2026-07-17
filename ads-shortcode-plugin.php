@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Ads Shortcode Plugin
  * Description: Manage reusable ads and render a random ad from a shortcode ID list.
- * Version: 1.3.0
+ * Version: 1.4.0
  * Author: Codex
  * Text Domain: ads-shortcode-plugin
  * Domain Path: /languages
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'ADS_PLUGIN_FILE', __FILE__ );
 define( 'ADS_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ADS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'ADS_PLUGIN_VERSION', '1.3.0' );
+define( 'ADS_PLUGIN_VERSION', '1.4.0' );
 define( 'ADS_PLUGIN_VERSION_OPTION', 'ads_shortcode_plugin_version' );
 define( 'ADS_POST_TYPE', 'ads_item' );
 define( 'ADS_GROUP_TAXONOMY', 'ads_group' );

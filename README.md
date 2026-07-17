@@ -14,6 +14,7 @@ WordPress plugin for managing reusable ads and embedding them with a shortcode.
 - supports ad and group start/end dates,
 - supports weighted ad selection,
 - counts impressions and clicks,
+- adds configurable UTM tracking to every ad link and explicit form target,
 - supports a global fallback ad,
 - supports cache-friendly AJAX rendering with `cache="ajax"`,
 - adds missing `loading="lazy"` and `decoding="async"` attributes to ad images,
@@ -73,6 +74,11 @@ vendor/bin/phpcs
 ```
 
 ## Development notes
+
+UTM values can be configured per ad. Empty fields use the site hostname for
+`utm_source`, `display` for `utm_medium`, and the ad slug for `utm_campaign`.
+The generated `utm_content` identifies the ad and click-target position. URLs
+that already contain individual UTM parameters keep their existing values.
 
 - shortcode name: `ads`
 - custom post type: `ads_item`

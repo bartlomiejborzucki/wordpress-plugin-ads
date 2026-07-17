@@ -217,6 +217,22 @@ class Ads_Plugin {
 				},
 			)
 		);
+
+		foreach ( array( '_ads_utm_source', '_ads_utm_medium', '_ads_utm_campaign' ) as $utm_meta_key ) {
+			register_post_meta(
+				ADS_POST_TYPE,
+				$utm_meta_key,
+				array(
+					'single'            => true,
+					'type'              => 'string',
+					'show_in_rest'      => false,
+					'sanitize_callback' => array( __CLASS__, 'sanitize_utm_value' ),
+					'auth_callback'     => function () {
+						return current_user_can( 'edit_posts' );
+					},
+				)
+			);
+		}
 	}
 
 	public static function register_shortcode() {
@@ -367,6 +383,17 @@ class Ads_Plugin {
 		}
 
 		return substr( $value, 0, 80 );
+	}
+
+	public static function sanitize_utm_value( $value ) {
+		$value = sanitize_text_field( (string) $value );
+		$value = trim( preg_replace( '/\s+/', ' ', $value ) );
+
+		if ( function_exists( 'mb_substr' ) ) {
+			return mb_substr( $value, 0, 100 );
+		}
+
+		return substr( $value, 0, 100 );
 	}
 
 	public static function get_default_template_top_label() {

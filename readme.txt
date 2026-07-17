@@ -4,7 +4,7 @@ Tags: ads, shortcode, advertising, oxygen, wysiwyg
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,6 +26,7 @@ Features:
 * Start and end dates for ads and ad groups
 * Weighted random ad selection
 * Impression and click counters
+* Automatic UTM tracking for every ad link and explicit form target
 * Duplicate action for quickly creating draft copies of existing ads
 * Global fallback ad setting
 * Cache-friendly AJAX rendering for full-page cache setups
@@ -83,6 +84,12 @@ The plugin renders one random published ad from the provided list.
 Yes. For example, `[ads ids="12,24" groups="sidebar,footer"]` uses both the provided ad IDs and ads assigned to the provided groups as the candidate pool, then renders one random published ad.
 
 == Changelog ==
+
+= 1.4.0 =
+
+* Added automatic UTM parameters to all ad links and explicit form targets.
+* Added per-ad UTM source, medium, and campaign settings.
+* Existing UTM parameters in ad URLs are preserved.
 
 = 1.3.0 =
 
