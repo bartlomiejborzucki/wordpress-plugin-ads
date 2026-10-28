@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once ADS_PLUGIN_PATH . 'includes/class-ads-admin.php';
 require_once ADS_PLUGIN_PATH . 'includes/class-ads-shortcode.php';
+require_once ADS_PLUGIN_PATH . 'includes/class-ads-abilities.php';
 
 class Ads_Plugin {
 
@@ -27,6 +28,8 @@ class Ads_Plugin {
 		add_action( 'init', array( __CLASS__, 'register_shortcode' ) );
 		add_action( 'init', array( __CLASS__, 'register_meta' ) );
 		add_action( 'init', array( __CLASS__, 'maybe_run_migrations' ), 20 );
+		add_action( 'wp_abilities_api_categories_init', array( 'Ads_Abilities', 'register_category' ) );
+		add_action( 'wp_abilities_api_init', array( 'Ads_Abilities', 'register_abilities' ) );
 		add_action( 'wp_ajax_ads_shortcode_render', array( 'Ads_Shortcode', 'ajax_render' ) );
 		add_action( 'wp_ajax_nopriv_ads_shortcode_render', array( 'Ads_Shortcode', 'ajax_render' ) );
 		add_action( 'wp_ajax_ads_shortcode_track_click', array( __CLASS__, 'ajax_track_click' ) );

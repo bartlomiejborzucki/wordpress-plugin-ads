@@ -15,6 +15,7 @@
     "lint": [
       "php -l ads-shortcode-plugin.php",
       "php -l includes/class-ads-plugin.php",
+      "php -l includes/class-ads-abilities.php",
       "php -l includes/class-ads-admin.php",
       "php -l includes/class-ads-shortcode.php",
       "php -l uninstall.php"

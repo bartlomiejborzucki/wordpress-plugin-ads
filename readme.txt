@@ -4,7 +4,7 @@ Tags: ads, shortcode, advertising, oxygen, wysiwyg
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,7 @@ Features:
 * Missing lazy loading and async decoding attributes are added to ad images
 * Missing lazy loading attributes are added to ad iframes
 * Compatible with classic content areas and builders such as Oxygen when shortcodes are executed
+* WordPress Abilities API integration for the official MCP Adapter on WordPress 6.9+
 
 Shortcode examples:
 
@@ -63,6 +64,10 @@ https://playground.wordpress.net/
 
 == Frequently Asked Questions ==
 
+= Can I manage ads through WordPress MCP? =
+
+Yes. On WordPress 6.9 or newer, install and activate the official MCP Adapter plugin. Its default server exposes the plugin's `list-ads`, `get-ad`, `list-groups`, and `save-ad` abilities to authenticated users with ad editing permissions. New ads are drafts unless `status` is explicitly set to `publish`; publishing requires the WordPress `publish_posts` capability. The shortcode continues to work without the MCP Adapter and on older WordPress versions.
+
 = Does it work with Oxygen Builder? =
 
 Yes, as long as you place the shortcode inside an element that executes native WordPress shortcodes.
@@ -84,6 +89,13 @@ The plugin renders one random published ad from the provided list.
 Yes. For example, `[ads ids="12,24" groups="sidebar,footer"]` uses both the provided ad IDs and ads assigned to the provided groups as the candidate pool, then renders one random published ad.
 
 == Changelog ==
+
+= 1.5.0 =
+
+* Added WordPress Abilities API support for listing, reading, creating, and updating ads via the MCP Adapter.
+* Added a read-only ability for ad groups.
+* Preserved compatibility with WordPress versions without the Abilities API.
+
 
 = 1.4.0 =
 

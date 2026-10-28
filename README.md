@@ -19,6 +19,7 @@ WordPress plugin for managing reusable ads and embedding them with a shortcode.
 - supports cache-friendly AJAX rendering with `cache="ajax"`,
 - adds missing `loading="lazy"` and `decoding="async"` attributes to ad images,
 - adds missing `loading="lazy"` attributes to ad iframes.
+- exposes ad management abilities to the official WordPress MCP Adapter on WordPress 6.9+.
 
 You can test the plugin without installing it on production by using WordPress Playground:
 
@@ -54,6 +55,21 @@ Upload that ZIP in `Plugins -> Add New -> Upload Plugin`.
 
 Use `cache="ajax"` when full-page cache, including LiteSpeed Cache, freezes the randomly selected ad in cached HTML. The default mode does not purge caches, set cache headers, or interfere with cache plugins.
 
+## WordPress MCP
+
+On WordPress 6.9 or newer, install and activate the [official MCP Adapter](https://wordpress.org/plugins/mcp-adapter/) alongside this plugin. Connect an authenticated MCP client to the adapter's default server at `/wp-json/mcp/mcp-adapter-default-server`. The ads abilities are available through the adapter's discovery and execution tools:
+
+| Ability | Purpose |
+| --- | --- |
+| `ads-shortcode-plugin/list-ads` | Page through ads the user can edit |
+| `ads-shortcode-plugin/get-ad` | Read one ad, including settings, groups, and counters |
+| `ads-shortcode-plugin/list-groups` | Read existing groups and emission dates |
+| `ads-shortcode-plugin/save-ad` | Create a draft or update an ad and its settings/groups |
+
+For example, execute `ads-shortcode-plugin/save-ad` with `{"title":"Sidebar promotion","content":"<p>Offer text</p>","group_slugs":["sidebar"],"settings":{"weight":2}}` to create a draft. Existing group slugs must be used. Pass `id` to update an existing ad; omitted fields remain unchanged. Set `status` to `publish` only when publication is intended.
+
+WordPress capabilities apply to every ability: users need `edit_posts` to list or create, `edit_post` for the specific ad to read or update it, and `publish_posts` to publish. The MCP Adapter authenticates the client separately. On older WordPress versions the plugin continues to work, but these abilities are unavailable.
+
 ## Local quality checks
 
 Basic syntax check:
@@ -61,6 +77,7 @@ Basic syntax check:
 ```bash
 php -l ads-shortcode-plugin.php
 php -l includes/class-ads-plugin.php
+php -l includes/class-ads-abilities.php
 php -l includes/class-ads-admin.php
 php -l includes/class-ads-shortcode.php
 php -l uninstall.php
