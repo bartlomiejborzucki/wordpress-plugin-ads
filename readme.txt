@@ -1,5 +1,4 @@
 === Ads Shortcode Plugin ===
-Contributors: codex
 Tags: ads, shortcode, advertising, oxygen, wysiwyg
 Requires at least: 6.0
 Tested up to: 6.8

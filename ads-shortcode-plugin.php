@@ -3,7 +3,7 @@
  * Plugin Name: Ads Shortcode Plugin
  * Description: Manage reusable ads and render a random ad from a shortcode ID list.
  * Version: 1.5.0
- * Author: Codex
+ * Author: Bartłomiej Borzucki
  * Text Domain: ads-shortcode-plugin
  * Domain Path: /languages
  * Requires at least: 6.0
